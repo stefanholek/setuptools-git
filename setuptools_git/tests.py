@@ -9,6 +9,7 @@ from setuptools_git.utils import rmtree
 from setuptools_git.utils import posix
 from setuptools_git.utils import fsdecode
 from setuptools_git.utils import hfs_quote
+from setuptools_git.utils import compose
 from setuptools_git.utils import decompose
 
 
@@ -43,6 +44,11 @@ class GitTestCase(unittest.TestCase):
         fd = open(filename, 'wt')
         fd.write('dummy\n')
         fd.close()
+        if sys.platform == 'darwin':
+            try:
+                filename = hfs_quote(filename)
+            except TypeError:
+                pass
         check_call(['git', 'add', filename])
         check_call(['git', 'commit', '--quiet', '-m', 'add new file'])
 
@@ -78,15 +84,19 @@ class listfiles_tests(GitTestCase):
     def test_nonascii_filename(self):
         filename = 'héhé.html'
 
+        self.create_git_file(filename)
+
         # HFS Plus uses decomposed UTF-8
         if sys.platform == 'darwin':
             filename = decompose(filename)
 
-        self.create_git_file(filename)
-
         self.assertEqual(
                 [fn for fn in os.listdir(self.directory) if fn[0] != '.'],
                 [filename])
+
+        # git ls-files returns composed UTF-8
+        if sys.platform == 'darwin':
+            filename = compose(filename)
 
         self.assertEqual(
                 set(self.listfiles(self.directory)),
@@ -98,19 +108,23 @@ class listfiles_tests(GitTestCase):
         else:
             filename = 'héhé.html'
 
-        # HFS Plus uses decomposed UTF-8
-        if sys.platform == 'darwin':
-            filename = decompose(filename)
-
         # Windows does not like byte filenames under Python 3
         if sys.platform == 'win32' and sys.version_info >= (3,):
             filename = filename.decode('utf-8')
 
         self.create_git_file(filename)
 
+        # HFS Plus uses decomposed UTF-8
+        if sys.platform == 'darwin':
+            filename = decompose(filename)
+
         self.assertEqual(
                 [fn for fn in os.listdir(self.directory) if fn[0] != '.'],
                 [fsdecode(filename)])
+
+        # git ls-files returns composed UTF-8
+        if sys.platform == 'darwin':
+            filename = compose(filename)
 
         self.assertEqual(
                 set(self.listfiles(self.directory)),
@@ -122,15 +136,15 @@ class listfiles_tests(GitTestCase):
         else:
             filename = 'h\xe9h\xe9.html'
 
-        # HFS Plus quotes unknown bytes
-        if sys.platform == 'darwin':
-            filename = hfs_quote(filename)
-
         # Windows does not like byte filenames under Python 3
         if sys.platform == 'win32' and sys.version_info >= (3,):
             filename = filename.decode('latin-1')
 
         self.create_git_file(filename)
+
+        # HFS Plus quotes unknown bytes
+        if sys.platform == 'darwin':
+            filename = hfs_quote(filename)
 
         self.assertEqual(
                 [fn for fn in os.listdir(self.directory) if fn[0] != '.'],
