@@ -68,17 +68,17 @@ class listfiles_tests(GitTestCase):
     def test_at_repo_root_with_subdir(self):
         self.create_git_file('root.txt')
         self.create_dir('subdir')
-        self.create_git_file('subdir', 'entry.txt')
+        self.create_git_file('subdir/entry.txt')
         self.assertEqual(
                 set(self.listfiles(self.directory)),
-                set(['root.txt', join('subdir', 'entry.txt')]))
+                set(['root.txt', 'subdir/entry.txt']))
 
     def test_at_repo_subdir(self):
         self.create_git_file('root.txt')
         self.create_dir('subdir')
-        self.create_git_file('subdir', 'entry.txt')
+        self.create_git_file('subdir/entry.txt')
         self.assertEqual(
-                set(self.listfiles(join(self.directory, 'subdir'))),
+                set(self.listfiles('subdir')),
                 set(['entry.txt']))
 
     def test_empty_dirname(self):
@@ -90,18 +90,22 @@ class listfiles_tests(GitTestCase):
     def test_empty_dirname_in_subdir(self):
         self.create_git_file('root.txt')
         self.create_dir('subdir')
-        self.create_git_file('subdir', 'entry.txt')
+        self.create_git_file('subdir/entry.txt')
         os.chdir('subdir')
         self.assertEqual(
                 set(self.listfiles()),
                 set(['entry.txt']))
 
     def test_directory_only_contains_another_directory(self):
-        self.create_dir('foo', 'bar')
-        self.create_git_file('foo', 'bar', 'root.txt')
+        self.create_dir('foo/bar')
+        self.create_git_file('foo/bar/entry.txt')
         self.assertEqual(
             set(self.listfiles()),
-            set([join('foo', 'bar', 'root.txt')])
+            set(['foo/bar/entry.txt'])
+            )
+        self.assertEqual(
+            set(self.listfiles('foo')),
+            set(['bar/entry.txt'])
             )
 
     def test_nonascii_filename(self):
@@ -197,8 +201,7 @@ class listfiles_tests(GitTestCase):
         saved = setuptools_git.check_output
         setuptools_git.check_output = do_raise
         try:
-            for filename in self.listfiles():
-                self.fail('unexpected results')
+            self.assertEqual(set(self.listfiles()), set())
         finally:
             setuptools_git.check_output = saved
 
