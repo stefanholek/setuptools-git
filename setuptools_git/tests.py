@@ -67,7 +67,7 @@ class listfiles_tests(GitTestCase):
 
     def test_at_repo_root_with_subdir(self):
         self.create_git_file('root.txt')
-        os.mkdir(join(self.directory, 'subdir'))
+        self.create_dir('subdir')
         self.create_git_file('subdir', 'entry.txt')
         self.assertEqual(
                 set(self.listfiles(self.directory)),
@@ -75,7 +75,7 @@ class listfiles_tests(GitTestCase):
 
     def test_at_repo_subdir(self):
         self.create_git_file('root.txt')
-        os.mkdir(join(self.directory, 'subdir'))
+        self.create_dir('subdir')
         self.create_git_file('subdir', 'entry.txt')
         self.assertEqual(
                 set(self.listfiles(join(self.directory, 'subdir'))),
@@ -170,8 +170,8 @@ class listfiles_tests(GitTestCase):
                 set(['root.txt']))
 
     def test_directory_only_contains_another_directory(self):
-        self.create_dir('foo/bar')
-        self.create_git_file('foo/bar/root.txt')
+        self.create_dir('foo', 'bar')
+        self.create_git_file('foo', 'bar', 'root.txt')
         self.assertEqual(
             set(self.listfiles()),
             set([join('foo', 'bar', 'root.txt')])
@@ -179,9 +179,9 @@ class listfiles_tests(GitTestCase):
 
     def test_empty_dirname_in_subdir(self):
         self.create_git_file('root.txt')
-        os.mkdir(join(self.directory, 'subdir'))
+        self.create_dir('subdir')
         self.create_git_file('subdir', 'entry.txt')
-        os.chdir(join(self.directory, 'subdir'))
+        os.chdir('subdir')
         self.assertEqual(
                 set(self.listfiles()),
                 set(['entry.txt']))
