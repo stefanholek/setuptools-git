@@ -81,6 +81,29 @@ class listfiles_tests(GitTestCase):
                 set(self.listfiles(join(self.directory, 'subdir'))),
                 set(['entry.txt']))
 
+    def test_empty_dirname(self):
+        self.create_git_file('root.txt')
+        self.assertEqual(
+                set(self.listfiles()),
+                set(['root.txt']))
+
+    def test_empty_dirname_in_subdir(self):
+        self.create_git_file('root.txt')
+        self.create_dir('subdir')
+        self.create_git_file('subdir', 'entry.txt')
+        os.chdir('subdir')
+        self.assertEqual(
+                set(self.listfiles()),
+                set(['entry.txt']))
+
+    def test_directory_only_contains_another_directory(self):
+        self.create_dir('foo', 'bar')
+        self.create_git_file('foo', 'bar', 'root.txt')
+        self.assertEqual(
+            set(self.listfiles()),
+            set([join('foo', 'bar', 'root.txt')])
+            )
+
     def test_nonascii_filename(self):
         filename = 'héhé.html'
 
@@ -162,29 +185,6 @@ class listfiles_tests(GitTestCase):
         self.assertEqual(
                 set(self.listfiles(self.directory)),
                 set([]))
-
-    def test_empty_dirname(self):
-        self.create_git_file('root.txt')
-        self.assertEqual(
-                set(self.listfiles()),
-                set(['root.txt']))
-
-    def test_directory_only_contains_another_directory(self):
-        self.create_dir('foo', 'bar')
-        self.create_git_file('foo', 'bar', 'root.txt')
-        self.assertEqual(
-            set(self.listfiles()),
-            set([join('foo', 'bar', 'root.txt')])
-            )
-
-    def test_empty_dirname_in_subdir(self):
-        self.create_git_file('root.txt')
-        self.create_dir('subdir')
-        self.create_git_file('subdir', 'entry.txt')
-        os.chdir('subdir')
-        self.assertEqual(
-                set(self.listfiles()),
-                set(['entry.txt']))
 
     def test_git_error(self):
         import setuptools_git
