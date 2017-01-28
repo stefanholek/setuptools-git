@@ -6,7 +6,6 @@ import unittest
 
 from os.path import realpath, join
 from setuptools_git.utils import rmtree
-from setuptools_git.utils import posix
 from setuptools_git.utils import fsdecode
 from setuptools_git.utils import hfs_quote
 from setuptools_git.utils import compose
@@ -204,4 +203,8 @@ class listfiles_tests(GitTestCase):
             self.assertEqual(set(self.listfiles()), set())
         finally:
             setuptools_git.check_output = saved
+
+
+if __name__ == '__main__':
+    unittest.main()
 
