@@ -29,27 +29,22 @@ class GitTestCase(unittest.TestCase):
         check_call(['git', 'init', '--quiet', os.curdir])
         return directory
 
-    def create_file(self, *path):
-        fd = open(join(*path), 'wt')
+    def create_file(self, path):
+        fd = open(path, 'wt')
         fd.write('dummy\n')
         fd.close()
 
-    def create_dir(self, *path):
-        os.makedirs(join(*path))
+    def create_dir(self, path):
+        os.makedirs(path)
 
-    def create_git_file(self, *path):
+    def add_file(self, path):
         from setuptools_git.utils import check_call
-        filename = join(*path)
-        fd = open(filename, 'wt')
-        fd.write('dummy\n')
-        fd.close()
-        if sys.platform == 'darwin':
-            try:
-                filename = hfs_quote(filename)
-            except TypeError:
-                pass
-        check_call(['git', 'add', filename])
+        check_call(['git', 'add', path])
         check_call(['git', 'commit', '--quiet', '-m', 'add new file'])
+
+    def create_and_add(self, path):
+        self.create_file(path)
+        self.add_file(path)
 
 
 class listfiles_tests(GitTestCase):
@@ -59,37 +54,37 @@ class listfiles_tests(GitTestCase):
         return listfiles(*a, **kw)
 
     def test_at_repo_root(self):
-        self.create_git_file('root.txt')
+        self.create_and_add('root.txt')
         self.assertEqual(
                 set(self.listfiles(self.directory)),
                 set(['root.txt']))
 
     def test_at_repo_root_with_subdir(self):
-        self.create_git_file('root.txt')
+        self.create_and_add('root.txt')
         self.create_dir('subdir')
-        self.create_git_file('subdir/entry.txt')
+        self.create_and_add('subdir/entry.txt')
         self.assertEqual(
                 set(self.listfiles(self.directory)),
                 set(['root.txt', 'subdir/entry.txt']))
 
     def test_at_repo_subdir(self):
-        self.create_git_file('root.txt')
+        self.create_and_add('root.txt')
         self.create_dir('subdir')
-        self.create_git_file('subdir/entry.txt')
+        self.create_and_add('subdir/entry.txt')
         self.assertEqual(
                 set(self.listfiles('subdir')),
                 set(['entry.txt']))
 
     def test_empty_dirname(self):
-        self.create_git_file('root.txt')
+        self.create_and_add('root.txt')
         self.assertEqual(
                 set(self.listfiles()),
                 set(['root.txt']))
 
     def test_empty_dirname_in_subdir(self):
-        self.create_git_file('root.txt')
+        self.create_and_add('root.txt')
         self.create_dir('subdir')
-        self.create_git_file('subdir/entry.txt')
+        self.create_and_add('subdir/entry.txt')
         os.chdir('subdir')
         self.assertEqual(
                 set(self.listfiles()),
@@ -97,7 +92,7 @@ class listfiles_tests(GitTestCase):
 
     def test_directory_only_contains_another_directory(self):
         self.create_dir('foo/bar')
-        self.create_git_file('foo/bar/entry.txt')
+        self.create_and_add('foo/bar/entry.txt')
         self.assertEqual(
             set(self.listfiles()),
             set(['foo/bar/entry.txt'])
@@ -110,14 +105,14 @@ class listfiles_tests(GitTestCase):
     def test_nonascii_filename(self):
         filename = 'héhé.html'
 
-        self.create_git_file(filename)
+        self.create_and_add(filename)
 
         # HFS Plus uses decomposed UTF-8
         if sys.platform == 'darwin':
             filename = decompose(filename)
 
         self.assertEqual(
-                [fn for fn in os.listdir(self.directory) if fn[0] != '.'],
+                [fn for fn in os.listdir() if fn[0] != '.'],
                 [filename])
 
         # git ls-files returns composed UTF-8
@@ -125,7 +120,7 @@ class listfiles_tests(GitTestCase):
             filename = compose(filename)
 
         self.assertEqual(
-                set(self.listfiles(self.directory)),
+                set(self.listfiles()),
                 set([filename]))
 
     def test_utf8_filename(self):
@@ -138,14 +133,16 @@ class listfiles_tests(GitTestCase):
         if sys.platform == 'win32' and sys.version_info >= (3,):
             filename = filename.decode('utf-8')
 
-        self.create_git_file(filename)
+        self.create_file(filename)
 
         # HFS Plus uses decomposed UTF-8
         if sys.platform == 'darwin':
             filename = decompose(filename)
 
+        self.add_file(filename)
+
         self.assertEqual(
-                [fn for fn in os.listdir(self.directory) if fn[0] != '.'],
+                [fn for fn in os.listdir() if fn[0] != '.'],
                 [fsdecode(filename)])
 
         # git ls-files returns composed UTF-8
@@ -153,7 +150,7 @@ class listfiles_tests(GitTestCase):
             filename = compose(filename)
 
         self.assertEqual(
-                set(self.listfiles(self.directory)),
+                set(self.listfiles()),
                 set([fsdecode(filename)]))
 
     def test_latin1_filename(self):
@@ -166,27 +163,29 @@ class listfiles_tests(GitTestCase):
         if sys.platform == 'win32' and sys.version_info >= (3,):
             filename = filename.decode('latin-1')
 
-        self.create_git_file(filename)
+        self.create_file(filename)
 
         # HFS Plus quotes unknown bytes
         if sys.platform == 'darwin':
             filename = hfs_quote(filename)
 
+        self.add_file(filename)
+
         self.assertEqual(
-                [fn for fn in os.listdir(self.directory) if fn[0] != '.'],
+                [fn for fn in os.listdir() if fn[0] != '.'],
                 [fsdecode(filename)])
 
         self.assertEqual(
-                set(self.listfiles(self.directory)),
+                set(self.listfiles()),
                 set([fsdecode(filename)]))
 
     def test_empty_repo(self):
         self.assertEqual(
-                [fn for fn in os.listdir(self.directory) if fn[0] != '.'],
+                [fn for fn in os.listdir() if fn[0] != '.'],
                 [])
 
         self.assertEqual(
-                set(self.listfiles(self.directory)),
+                set(self.listfiles()),
                 set([]))
 
     def test_git_error(self):
@@ -196,7 +195,7 @@ class listfiles_tests(GitTestCase):
         def do_raise(*args, **kw):
             raise CalledProcessError(1, 'git')
 
-        self.create_git_file('root.txt')
+        self.create_and_add('root.txt')
         saved = setuptools_git.check_output
         setuptools_git.check_output = do_raise
         try:
