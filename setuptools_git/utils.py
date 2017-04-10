@@ -11,7 +11,7 @@ if sys.version_info >= (3,):
 else:
     from urllib import quote as url_quote
 
-__all__ = ['check_call', 'check_output', 'rmtree',
+__all__ = ['check_call', 'check_output', 'CalledProcessError', 'rmtree',
            'b', 'posix', 'fsdecode', 'hfs_quote', 'compose', 'decompose']
 
 
@@ -100,7 +100,7 @@ def posix(path):
 # Decode path from fs encoding under Python 3
 def fsdecode(path):
     if sys.version_info >= (3,):
-        if not isinstance(path, str):
+        if not isinstance(path, unicode):
             if sys.platform == 'win32':
                 errors = 'strict'
             else:
