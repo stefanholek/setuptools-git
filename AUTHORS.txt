@@ -7,7 +7,6 @@ Chris McDonough <chrism@plope.com>
 
 Wichert Akkerman <wichert@wiggy.net>
   Handle in-git symlinks, small code cleanups
-  Current maintainer
 
 Vinay Sajip <vinay_sajip@yahoo.co.uk>:
   Python 3 support

@@ -12,7 +12,8 @@ setup(
     url="https://github.com/stefanholek/setuptools-git",
     keywords='distutils setuptools git',
     description="Setuptools revision control system plugin for Git",
-    long_description=open('README.rst').read(),
+    long_description=open('README.rst').read() + '\n' +
+                     open('CHANGES.rst').read(),
     license='BSD-3-Clause',
     packages=find_packages(),
     test_suite='setuptools_git',
