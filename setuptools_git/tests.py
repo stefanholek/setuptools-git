@@ -112,7 +112,7 @@ class listfiles_tests(GitTestCase):
             filename = decompose(filename)
 
         self.assertEqual(
-                [fn for fn in os.listdir() if fn[0] != '.'],
+                [fn for fn in os.listdir(os.curdir) if fn[0] != '.'],
                 [filename])
 
         # git ls-files returns composed UTF-8
@@ -142,7 +142,7 @@ class listfiles_tests(GitTestCase):
         self.add_file(filename)
 
         self.assertEqual(
-                [fn for fn in os.listdir() if fn[0] != '.'],
+                [fn for fn in os.listdir(os.curdir) if fn[0] != '.'],
                 [fsdecode(filename)])
 
         # git ls-files returns composed UTF-8
@@ -172,7 +172,7 @@ class listfiles_tests(GitTestCase):
         self.add_file(filename)
 
         self.assertEqual(
-                [fn for fn in os.listdir() if fn[0] != '.'],
+                [fn for fn in os.listdir(os.curdir) if fn[0] != '.'],
                 [fsdecode(filename)])
 
         self.assertEqual(
@@ -181,7 +181,7 @@ class listfiles_tests(GitTestCase):
 
     def test_empty_repo(self):
         self.assertEqual(
-                [fn for fn in os.listdir() if fn[0] != '.'],
+                [fn for fn in os.listdir(os.curdir) if fn[0] != '.'],
                 [])
 
         self.assertEqual(
